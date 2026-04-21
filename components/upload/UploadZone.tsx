@@ -4,6 +4,7 @@ import { useState, useRef, DragEvent, ChangeEvent } from "react";
 
 interface UploadZoneProps {
   onFile: (file: File) => void;
+  disabled?: boolean;
 }
 
 type State =
@@ -25,7 +26,7 @@ function preflight(file: File): string | null {
   return null;
 }
 
-export function UploadZone({ onFile }: UploadZoneProps) {
+export function UploadZone({ onFile, disabled = false }: UploadZoneProps) {
   const [state, setState] = useState<State>({ status: "idle" });
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -72,7 +73,7 @@ export function UploadZone({ onFile }: UploadZoneProps) {
   }
 
   const isDragging = state.status === "dragging";
-  const isChecking = state.status === "checking";
+  const isChecking = state.status === "checking" || disabled;
   const isSelected = state.status === "selected";
 
   const zoneStyle: React.CSSProperties = {
@@ -159,10 +160,13 @@ export function UploadZone({ onFile }: UploadZoneProps) {
         />
       </div>
 
-      {/* CTA button — always visible */}
+      {/* CTA button — always visible. Opens picker if no file selected, begins if one is. */}
       <div>
         <button
-          onClick={handleBegin}
+          onClick={() => {
+            if (isSelected) handleBegin();
+            else inputRef.current?.click();
+          }}
           style={{
             fontFamily: "'DM Sans', sans-serif",
             fontWeight: 600,
