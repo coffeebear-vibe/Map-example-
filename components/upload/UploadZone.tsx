@@ -41,7 +41,10 @@ export function UploadZone({ onFile }: UploadZoneProps) {
   function handleBegin() {
     if (state.status !== "selected") return;
     setState({ status: "checking" });
-    setTimeout(() => onFile((state as { status: "selected"; file: File }).file), 400);
+    setTimeout(
+      () => onFile((state as { status: "selected"; file: File }).file),
+      400
+    );
   }
 
   function onDragOver(e: DragEvent) {
@@ -72,13 +75,50 @@ export function UploadZone({ onFile }: UploadZoneProps) {
   const isChecking = state.status === "checking";
   const isSelected = state.status === "selected";
 
+  const zoneStyle: React.CSSProperties = {
+    width: "100%",
+    maxWidth: "560px",
+    padding: "3.5rem 2rem",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "0.375rem",
+    border: isDragging
+      ? "2px solid #F2A413"
+      : "2px dashed #4B7DBF",
+    borderRadius: "4px",
+    backgroundColor: isDragging ? "#FEF3D6" : "#F0EFE9",
+    cursor: isChecking ? "default" : "pointer",
+    opacity: isChecking ? 0.7 : 1,
+    transition: "border-color 0.15s, background-color 0.15s",
+    userSelect: "none",
+  };
+
+  const primaryTextStyle: React.CSSProperties = {
+    fontFamily: "'DM Sans', sans-serif",
+    fontWeight: 500,
+    fontSize: "1rem",
+    color: "#1A1A1A",
+    margin: 0,
+  };
+
+  const secondaryTextStyle: React.CSSProperties = {
+    fontFamily: "'DM Sans', sans-serif",
+    fontWeight: 400,
+    fontSize: "0.875rem",
+    color: "#6B6B6B",
+    margin: 0,
+  };
+
   return (
-    <div className="flex flex-col gap-4" style={{ maxWidth: "560px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem", maxWidth: "560px" }}>
       {/* Drop zone */}
       <div
         role="button"
         tabIndex={isChecking ? -1 : 0}
         aria-label="Upload a PDF — drag and drop or press Enter to browse"
+        style={zoneStyle}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
@@ -89,39 +129,22 @@ export function UploadZone({ onFile }: UploadZoneProps) {
             inputRef.current?.click();
           }
         }}
-        className={[
-          "w-full py-14 px-8 flex flex-col items-center justify-center gap-2",
-          "border-2 cursor-pointer select-none transition-colors duration-150",
-          "rounded-[4px]",
-          isDragging
-            ? "border-solid border-accent bg-[#FEF3D6]"
-            : isSelected
-            ? "border-solid border-primary bg-surface"
-            : "border-dashed border-primary bg-surface",
-          isChecking ? "pointer-events-none opacity-70" : "",
-        ].join(" ")}
       >
         {isChecking ? (
-          <p className="font-sans font-medium text-ink text-base">
-            Checking your PDF&hellip;
-          </p>
+          <p style={primaryTextStyle}>Checking your PDF&hellip;</p>
         ) : isSelected ? (
           <>
-            <p className="font-sans font-medium text-ink text-base">
+            <p style={primaryTextStyle}>
               {(state as { status: "selected"; file: File }).file.name}
             </p>
-            <p className="font-sans text-sm text-muted">
-              Click to choose a different file
-            </p>
+            <p style={secondaryTextStyle}>Click to choose a different file</p>
           </>
         ) : (
           <>
-            <p className="font-sans font-medium text-ink text-base">
+            <p style={primaryTextStyle}>
               {isDragging ? "Release to upload" : "Drop your PDF here"}
             </p>
-            <p className="font-sans text-sm text-muted">
-              or click to browse — up to 50 MB
-            </p>
+            <p style={secondaryTextStyle}>or click to browse — up to 50 MB</p>
           </>
         )}
 
@@ -136,20 +159,45 @@ export function UploadZone({ onFile }: UploadZoneProps) {
         />
       </div>
 
-      {/* CTA — shown only when file is selected */}
-      {isSelected && (
+      {/* CTA button — always visible */}
+      <div>
         <button
           onClick={handleBegin}
-          className="self-start font-sans font-semibold text-ink text-base px-8 py-3.5 bg-accent hover:bg-accent-hover transition-colors duration-150 rounded-[4px] border-0"
-          style={{ boxShadow: "none" }}
+          style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontWeight: 600,
+            fontSize: "1rem",
+            color: "#1A1A1A",
+            backgroundColor: "#F2A413",
+            border: "none",
+            borderRadius: "4px",
+            padding: "14px 32px",
+            cursor: "pointer",
+            boxShadow: "none",
+            transition: "background-color 0.15s",
+          }}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.backgroundColor = "#D97F0A")
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.backgroundColor = "#F2A413")
+          }
         >
-          Begin accessibility check
+          Get Started — Upload a PDF
         </button>
-      )}
+      </div>
 
       {/* Error */}
       {state.status === "error" && (
-        <p role="alert" className="text-sm text-error font-sans">
+        <p
+          role="alert"
+          style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: "0.875rem",
+            color: "#D93B48",
+            margin: 0,
+          }}
+        >
           {state.message}
         </p>
       )}

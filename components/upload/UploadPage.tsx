@@ -9,10 +9,28 @@ export function UploadPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ backgroundColor: "#FAFAF8" }}
+    >
       {/* Nav */}
-      <header className="border-b border-rule px-16 py-6 flex items-center">
-        <span className="font-sans font-semibold text-ink text-base tracking-tight">
+      <header
+        className="flex items-center"
+        style={{
+          borderBottom: "1px solid #D9D6CC",
+          padding: "1.5rem 4rem",
+          backgroundColor: "#FAFAF8",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontWeight: 600,
+            fontSize: "1rem",
+            color: "#1A1A1A",
+            letterSpacing: "-0.01em",
+          }}
+        >
           PDF Accessibility Guide
         </span>
       </header>
@@ -20,12 +38,19 @@ export function UploadPage() {
       {/* Hero */}
       <main
         id="main-content"
-        className="flex-1 px-16 py-24"
+        className="flex-1"
+        style={{ padding: "6rem 4rem" }}
       >
-        <div className="max-w-2xl">
+        <div style={{ maxWidth: "42rem" }}>
           <h1
-            className="font-display font-bold text-ink leading-tight"
-            style={{ fontSize: "clamp(2.5rem, 5vw, 3.5rem)" }}
+            style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontWeight: 700,
+              fontSize: "clamp(2.5rem, 5vw, 3.5rem)",
+              color: "#1A1A1A",
+              lineHeight: 1.15,
+              margin: 0,
+            }}
           >
             Make your PDF accessible
             <br />
@@ -33,22 +58,41 @@ export function UploadPage() {
           </h1>
 
           <p
-            className="mt-6 font-sans text-muted leading-relaxed"
-            style={{ fontSize: "1.125rem", maxWidth: "480px" }}
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontWeight: 400,
+              fontSize: "1.125rem",
+              color: "#6B6B6B",
+              lineHeight: 1.65,
+              marginTop: "1.5rem",
+              maxWidth: "480px",
+            }}
           >
             Upload a PDF and we&rsquo;ll walk you through every fix, one step
             at a time. No technical knowledge required.
           </p>
 
-          <div className="mt-10">
+          <div style={{ marginTop: "2.5rem" }}>
             <UploadZone onFile={handleFile} />
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-rule py-5 px-16">
-        <p className="font-sans text-sm text-muted">
+      <footer
+        style={{
+          borderTop: "1px solid #D9D6CC",
+          padding: "1.25rem 4rem",
+        }}
+      >
+        <p
+          style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: "0.875rem",
+            color: "#6B6B6B",
+            margin: 0,
+          }}
+        >
           Files processed locally &nbsp;&middot;&nbsp; WCAG 2.2 Level AA
           &nbsp;&middot;&nbsp; Built for librarians and admins
         </p>

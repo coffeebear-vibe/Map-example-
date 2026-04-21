@@ -1,20 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-dm-sans",
-  display: "swap",
-});
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["700"],
-  variable: "--font-playfair",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "PDF Accessibility Guide",
@@ -27,7 +12,19 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${dmSans.variable} ${playfair.variable} antialiased`}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="antialiased">
         <a href="#main-content" className="skip-nav">
           Skip to main content
         </a>
