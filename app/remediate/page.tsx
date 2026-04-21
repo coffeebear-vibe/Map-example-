@@ -1,9 +1,9 @@
-import { RemediatePage } from "@/components/wizard/RemediatePage";
+import { WizardShell } from "@/components/wizard/WizardShell";
 
 export const metadata = {
-  title: "PDF Accessibility Guide — Reviewing your PDF",
+  title: "PDF Accessibility Guide — Remediation Wizard",
 };
 
 export default function Remediate() {
-  return <RemediatePage />;
+  return <WizardShell />;
 }

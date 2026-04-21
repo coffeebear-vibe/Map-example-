@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, DragEvent, ChangeEvent } from "react";
+import { useState, useRef, useEffect, DragEvent, ChangeEvent } from "react";
 
 interface UploadZoneProps {
   onFile: (file: File) => void;
@@ -11,7 +11,6 @@ type State =
   | { status: "idle" }
   | { status: "dragging" }
   | { status: "selected"; file: File }
-  | { status: "checking" }
   | { status: "error"; message: string };
 
 const MAX_BYTES = 50 * 1024 * 1024;
@@ -28,7 +27,18 @@ function preflight(file: File): string | null {
 
 export function UploadZone({ onFile, disabled = false }: UploadZoneProps) {
   const [state, setState] = useState<State>({ status: "idle" });
+  const fileRef = useRef<File | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // If the parent finishes/fails (disabled goes false) while we still have a
+  // file selected, stay in "selected" so the user can retry.
+  const prevDisabled = useRef(disabled);
+  useEffect(() => {
+    if (prevDisabled.current && !disabled && fileRef.current) {
+      setState({ status: "selected", file: fileRef.current });
+    }
+    prevDisabled.current = disabled;
+  }, [disabled]);
 
   function handleFile(file: File) {
     const err = preflight(file);
@@ -36,21 +46,18 @@ export function UploadZone({ onFile, disabled = false }: UploadZoneProps) {
       setState({ status: "error", message: err });
       return;
     }
+    fileRef.current = file;
     setState({ status: "selected", file });
   }
 
   function handleBegin() {
-    if (state.status !== "selected") return;
-    setState({ status: "checking" });
-    setTimeout(
-      () => onFile((state as { status: "selected"; file: File }).file),
-      400
-    );
+    if (state.status !== "selected" || disabled) return;
+    onFile(state.file);
   }
 
   function onDragOver(e: DragEvent) {
     e.preventDefault();
-    if (state.status !== "checking")
+    if (!disabled)
       setState((s) => (s.status === "dragging" ? s : { status: "dragging" }));
   }
 
@@ -73,7 +80,6 @@ export function UploadZone({ onFile, disabled = false }: UploadZoneProps) {
   }
 
   const isDragging = state.status === "dragging";
-  const isChecking = state.status === "checking" || disabled;
   const isSelected = state.status === "selected";
 
   const zoneStyle: React.CSSProperties = {
@@ -90,8 +96,8 @@ export function UploadZone({ onFile, disabled = false }: UploadZoneProps) {
       : "2px dashed #4B7DBF",
     borderRadius: "4px",
     backgroundColor: isDragging ? "#FEF3D6" : "#F0EFE9",
-    cursor: isChecking ? "default" : "pointer",
-    opacity: isChecking ? 0.7 : 1,
+    cursor: disabled ? "default" : "pointer",
+    opacity: disabled ? 0.7 : 1,
     transition: "border-color 0.15s, background-color 0.15s",
     userSelect: "none",
   };
@@ -117,23 +123,21 @@ export function UploadZone({ onFile, disabled = false }: UploadZoneProps) {
       {/* Drop zone */}
       <div
         role="button"
-        tabIndex={isChecking ? -1 : 0}
+        tabIndex={disabled ? -1 : 0}
         aria-label="Upload a PDF — drag and drop or press Enter to browse"
         style={zoneStyle}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
-        onClick={() => !isChecking && inputRef.current?.click()}
+        onClick={() => !disabled && inputRef.current?.click()}
         onKeyDown={(e) => {
-          if ((e.key === "Enter" || e.key === " ") && !isChecking) {
+          if ((e.key === "Enter" || e.key === " ") && !disabled) {
             e.preventDefault();
             inputRef.current?.click();
           }
         }}
       >
-        {isChecking ? (
-          <p style={primaryTextStyle}>Checking your PDF&hellip;</p>
-        ) : isSelected ? (
+        {isSelected ? (
           <>
             <p style={primaryTextStyle}>
               {(state as { status: "selected"; file: File }).file.name}
@@ -160,34 +164,34 @@ export function UploadZone({ onFile, disabled = false }: UploadZoneProps) {
         />
       </div>
 
-      {/* CTA button — always visible. Opens picker if no file selected, begins if one is. */}
+      {/* CTA button */}
       <div>
         <button
           onClick={() => {
-            if (isSelected) handleBegin();
-            else inputRef.current?.click();
+            if (isSelected && !disabled) handleBegin();
+            else if (!disabled) inputRef.current?.click();
           }}
+          disabled={disabled}
           style={{
             fontFamily: "'DM Sans', sans-serif",
             fontWeight: 600,
             fontSize: "1rem",
             color: "#1A1A1A",
-            backgroundColor: "#F2A413",
+            backgroundColor: disabled ? "#D9D6CC" : "#F2A413",
             border: "none",
             borderRadius: "4px",
             padding: "14px 32px",
-            cursor: "pointer",
-            boxShadow: "none",
+            cursor: disabled ? "not-allowed" : "pointer",
             transition: "background-color 0.15s",
           }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.backgroundColor = "#D97F0A")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.backgroundColor = "#F2A413")
-          }
+          onMouseEnter={(e) => {
+            if (!disabled) e.currentTarget.style.backgroundColor = "#D97F0A";
+          }}
+          onMouseLeave={(e) => {
+            if (!disabled) e.currentTarget.style.backgroundColor = "#F2A413";
+          }}
         >
-          Get Started — Upload a PDF
+          {disabled ? "Processing…" : "Get Started — Upload a PDF"}
         </button>
       </div>
 

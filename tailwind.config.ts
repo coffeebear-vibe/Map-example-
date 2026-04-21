@@ -9,20 +9,35 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#4B7DBF",
-        accent: "#F2A413",
-        "accent-hover": "#D97F0A",
-        success: "#8FBF78",
-        error: "#D93B48",
-        bg: "#FAFAF8",
-        surface: "#F0EFE9",
-        ink: "#1A1A1A",
-        muted: "#6B6B6B",
-        rule: "#D9D6CC",
+        accent: {
+          DEFAULT: "#7C3AED",
+          hover: "#6D28D9",
+          light: "#EDE9FE",
+        },
+        success: {
+          DEFAULT: "#16A34A",
+          light: "#DCFCE7",
+        },
+        warning: {
+          DEFAULT: "#D97706",
+          light: "#FEF3C7",
+        },
+        error: {
+          DEFAULT: "#DC2626",
+          light: "#FEE2E2",
+        },
+        border: "#E4E4E7",
+        bg: "#FFFFFF",
+        surface: "#F7F7F8",
+        "text-primary": "#1A1A1A",
+        "text-secondary": "#6B6B6B",
+      },
+      borderRadius: {
+        card: "12px",
+        input: "8px",
       },
       fontFamily: {
-        sans: ["var(--font-dm-sans)", "sans-serif"],
-        display: ["var(--font-playfair)", "Georgia", "serif"],
+        sans: ["DM Sans", "sans-serif"],
       },
     },
   },

@@ -2,18 +2,14 @@ import type { RemediationSession } from "./types";
 
 // ── pdfjs lazy loader (browser-only) ─────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _pdfjs: any = null;
+let _pdfjs: typeof import("pdfjs-dist") | null = null;
 
 async function getPdfjs() {
   if (_pdfjs) return _pdfjs;
-  _pdfjs = await import("pdfjs-dist");
-  // pdfjs 5.x ships an ESM worker — point at the CDN copy so Next.js
-  // doesn't try to bundle the worker file itself.
-  if (!_pdfjs.GlobalWorkerOptions.workerSrc) {
-    _pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${_pdfjs.version}/build/pdf.worker.min.mjs`;
-  }
-  return _pdfjs;
+  const pdfjs = await import("pdfjs-dist");
+  pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+  _pdfjs = pdfjs;
+  return pdfjs;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -28,24 +24,6 @@ function findNodes(node: any, roles: string[], out: any[] = []): any[] {
     }
   }
   return out;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function renderThumb(page: any, width = 220): Promise<string> {
-  try {
-    const vp = page.getViewport({ scale: 1 });
-    const scale = width / vp.width;
-    const scaled = page.getViewport({ scale });
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(scaled.width);
-    canvas.height = Math.round(scaled.height);
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return "";
-    await page.render({ canvasContext: ctx, viewport: scaled }).promise;
-    return canvas.toDataURL("image/jpeg", 0.75);
-  } catch {
-    return "";
-  }
 }
 
 function emptySession(
@@ -76,15 +54,19 @@ function emptySession(
 
 // ── Main export ───────────────────────────────────────────────────────────────
 
-export async function analyzePdf(file: File): Promise<RemediationSession> {
+export async function analyzePdf(
+  file: File,
+  onProgress?: (current: number, total: number) => void
+): Promise<RemediationSession> {
   const pdfjs = await getPdfjs();
   const buffer = await file.arrayBuffer();
+  const data = new Uint8Array(buffer);
 
   // Load document
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let pdf: any;
   try {
-    pdf = await pdfjs.getDocument({ data: buffer }).promise;
+    pdf = await pdfjs.getDocument({ data }).promise;
   } catch (err: unknown) {
     const e = err as { name?: string };
     if (e?.name === "PasswordException") {
@@ -126,6 +108,8 @@ export async function analyzePdf(file: File): Promise<RemediationSession> {
   const tables: RemediationSession["analysis"]["tables"] = [];
 
   for (let i = 0; i < numPages; i++) {
+    onProgress?.(i + 1, numPages);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let page: any;
     try {
@@ -146,11 +130,10 @@ export async function analyzePdf(file: File): Promise<RemediationSession> {
       const figureNodes = findNodes(structTree, ["Figure", "Image", "Formula"]);
       for (const node of figureNodes) {
         const hasAlt = typeof node.alt === "string" && node.alt.trim().length > 0;
-        const preview = await renderThumb(page);
         images.push({
           id: `img-p${i}-${images.length}`,
           pageIndex: i,
-          preview,
+          preview: "",
           hasAlt,
           currentAlt: node.alt ?? null,
         });

@@ -8,7 +8,7 @@ import { storeSession } from "@/lib/pdf/session-store";
 
 type PageState =
   | { status: "idle" }
-  | { status: "analyzing" }
+  | { status: "analyzing"; page: number; total: number }
   | { status: "error"; message: string };
 
 export function UploadPage() {
@@ -16,9 +16,11 @@ export function UploadPage() {
   const [pageState, setPageState] = useState<PageState>({ status: "idle" });
 
   async function handleFile(file: File) {
-    setPageState({ status: "analyzing" });
+    setPageState({ status: "analyzing", page: 0, total: 0 });
     try {
-      const session = await analyzePdf(file);
+      const session = await analyzePdf(file, (page, total) => {
+        setPageState({ status: "analyzing", page, total });
+      });
 
       if (session.file.isPasswordProtected) {
         setPageState({
@@ -35,13 +37,16 @@ export function UploadPage() {
       console.error("Analysis failed:", err);
       setPageState({
         status: "error",
-        message:
-          "Something went wrong while reading this PDF. Please try again or use a different file.",
+        message: "Something went wrong while reading this PDF. Please try again or use a different file.",
       });
     }
   }
 
   const isAnalyzing = pageState.status === "analyzing";
+  const progressText =
+    isAnalyzing && pageState.total > 0
+      ? `Analysing page ${pageState.page} of ${pageState.total}…`
+      : "Analysing your PDF…";
 
   return (
     <div
@@ -119,7 +124,7 @@ export function UploadPage() {
                 color: "#6B6B6B",
               }}
             >
-              Analysing your PDF — this takes a few seconds&hellip;
+              {progressText}
             </p>
           )}
 
