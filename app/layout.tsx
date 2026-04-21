@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { DM_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -9,10 +9,17 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["700"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "PDF Accessibility Fixer",
+  title: "PDF Accessibility Guide",
   description:
-    "Make your PDFs accessible to everyone — a guided, step-by-step WCAG 2.2 remediation tool.",
+    "Upload a PDF and we'll walk you through every fix, one step at a time.",
 };
 
 export default function RootLayout({
@@ -20,7 +27,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${dmSans.variable} antialiased`}>
+      <body className={`${dmSans.variable} ${playfair.variable} antialiased`}>
         <a href="#main-content" className="skip-nav">
           Skip to main content
         </a>

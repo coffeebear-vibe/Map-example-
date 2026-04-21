@@ -1,36 +1,33 @@
 "use client";
 
 import { useState, useRef, DragEvent, ChangeEvent } from "react";
-import { Spinner } from "@/components/ui/Spinner";
 
 interface UploadZoneProps {
   onFile: (file: File) => void;
 }
 
-type UploadState =
+type State =
   | { status: "idle" }
   | { status: "dragging" }
+  | { status: "selected"; file: File }
   | { status: "checking" }
-  | { status: "error"; message: string; detail?: string };
+  | { status: "error"; message: string };
 
-const MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
+const MAX_BYTES = 50 * 1024 * 1024;
+
+function preflight(file: File): string | null {
+  const isPdf =
+    file.type === "application/pdf" ||
+    (!file.type && file.name.toLowerCase().endsWith(".pdf"));
+  if (!isPdf) return "Only PDF files are supported. Please choose a .pdf file.";
+  if (file.size > MAX_BYTES)
+    return `This file is ${(file.size / 1024 / 1024).toFixed(1)} MB. Files must be under 50 MB.`;
+  return null;
+}
 
 export function UploadZone({ onFile }: UploadZoneProps) {
-  const [state, setState] = useState<UploadState>({ status: "idle" });
+  const [state, setState] = useState<State>({ status: "idle" });
   const inputRef = useRef<HTMLInputElement>(null);
-
-  function preflight(file: File): string | null {
-    if (!file.type && !file.name.toLowerCase().endsWith(".pdf")) {
-      return "Only PDF files are supported. Please choose a .pdf file.";
-    }
-    if (file.type && file.type !== "application/pdf") {
-      return "Only PDF files are supported. Please choose a .pdf file.";
-    }
-    if (file.size > MAX_SIZE_BYTES) {
-      return `This file is ${(file.size / 1024 / 1024).toFixed(1)} MB. Files must be under 50 MB.`;
-    }
-    return null;
-  }
 
   function handleFile(file: File) {
     const err = preflight(file);
@@ -38,22 +35,27 @@ export function UploadZone({ onFile }: UploadZoneProps) {
       setState({ status: "error", message: err });
       return;
     }
+    setState({ status: "selected", file });
+  }
+
+  function handleBegin() {
+    if (state.status !== "selected") return;
     setState({ status: "checking" });
-    // Small delay so the checking state is perceptible, then hand off
-    setTimeout(() => onFile(file), 400);
+    setTimeout(() => onFile((state as { status: "selected"; file: File }).file), 400);
   }
 
-  function onDragOver(e: DragEvent<HTMLDivElement>) {
+  function onDragOver(e: DragEvent) {
     e.preventDefault();
-    setState((s) => (s.status === "dragging" ? s : { status: "dragging" }));
+    if (state.status !== "checking")
+      setState((s) => (s.status === "dragging" ? s : { status: "dragging" }));
   }
 
-  function onDragLeave(e: DragEvent<HTMLDivElement>) {
+  function onDragLeave(e: DragEvent) {
     e.preventDefault();
     setState((s) => (s.status === "dragging" ? { status: "idle" } : s));
   }
 
-  function onDrop(e: DragEvent<HTMLDivElement>) {
+  function onDrop(e: DragEvent) {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
     if (file) handleFile(file);
@@ -63,20 +65,20 @@ export function UploadZone({ onFile }: UploadZoneProps) {
   function onInputChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) handleFile(file);
-    // reset so same file can be re-selected
     e.target.value = "";
   }
 
   const isDragging = state.status === "dragging";
   const isChecking = state.status === "checking";
+  const isSelected = state.status === "selected";
 
   return (
-    <div className="w-full flex flex-col items-center gap-4">
+    <div className="flex flex-col gap-4" style={{ maxWidth: "560px" }}>
       {/* Drop zone */}
       <div
         role="button"
-        tabIndex={0}
-        aria-label="Upload PDF — drag and drop or press Enter to browse"
+        tabIndex={isChecking ? -1 : 0}
+        aria-label="Upload a PDF — drag and drop or press Enter to browse"
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
@@ -88,62 +90,40 @@ export function UploadZone({ onFile }: UploadZoneProps) {
           }
         }}
         className={[
-          "relative w-full max-w-lg rounded-2xl border-2 border-dashed",
-          "flex flex-col items-center justify-center gap-5 px-8 py-14",
-          "transition-all duration-200 cursor-pointer select-none",
+          "w-full py-14 px-8 flex flex-col items-center justify-center gap-2",
+          "border-2 cursor-pointer select-none transition-colors duration-150",
+          "rounded-[4px]",
           isDragging
-            ? "border-accent bg-accent-light scale-[1.01]"
-            : "border-border bg-surface hover:border-accent hover:bg-accent-light/40",
-          isChecking ? "pointer-events-none opacity-80" : "",
+            ? "border-solid border-accent bg-[#FEF3D6]"
+            : isSelected
+            ? "border-solid border-primary bg-surface"
+            : "border-dashed border-primary bg-surface",
+          isChecking ? "pointer-events-none opacity-70" : "",
         ].join(" ")}
       >
-        {/* Icon */}
-        <div
-          className={`flex items-center justify-center w-16 h-16 rounded-2xl transition-colors ${
-            isDragging ? "bg-accent text-white" : "bg-border text-text-secondary"
-          }`}
-          aria-hidden="true"
-        >
-          {isChecking ? (
-            <Spinner size="md" />
-          ) : (
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 32 32"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M6 28h20M16 4v16M8 12l8-8 8 8"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          )}
-        </div>
-
-        {/* Text */}
-        <div className="text-center">
-          {isChecking ? (
-            <p className="text-base font-medium text-text-primary">
-              Checking your PDF&hellip;
+        {isChecking ? (
+          <p className="font-sans font-medium text-ink text-base">
+            Checking your PDF&hellip;
+          </p>
+        ) : isSelected ? (
+          <>
+            <p className="font-sans font-medium text-ink text-base">
+              {(state as { status: "selected"; file: File }).file.name}
             </p>
-          ) : (
-            <>
-              <p className="text-base font-medium text-text-primary mb-1">
-                {isDragging
-                  ? "Drop your PDF here"
-                  : "Drag your PDF here, or click to browse"}
-              </p>
-              <p className="text-sm text-text-secondary">
-                PDF files only &bull; Maximum 50 MB
-              </p>
-            </>
-          )}
-        </div>
+            <p className="font-sans text-sm text-muted">
+              Click to choose a different file
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="font-sans font-medium text-ink text-base">
+              {isDragging ? "Release to upload" : "Drop your PDF here"}
+            </p>
+            <p className="font-sans text-sm text-muted">
+              or click to browse — up to 50 MB
+            </p>
+          </>
+        )}
 
         <input
           ref={inputRef}
@@ -156,28 +136,22 @@ export function UploadZone({ onFile }: UploadZoneProps) {
         />
       </div>
 
-      {/* Error message */}
-      {state.status === "error" && (
-        <div
-          role="alert"
-          className="w-full max-w-lg rounded-input border border-error/30 bg-error-light px-5 py-4 flex gap-3"
+      {/* CTA — shown only when file is selected */}
+      {isSelected && (
+        <button
+          onClick={handleBegin}
+          className="self-start font-sans font-semibold text-ink text-base px-8 py-3.5 bg-accent hover:bg-accent-hover transition-colors duration-150 rounded-[4px] border-0"
+          style={{ boxShadow: "none" }}
         >
-          <div className="mt-0.5 shrink-0 text-error" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                fillRule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-error">{state.message}</p>
-            {state.detail && (
-              <p className="text-sm text-error/80 mt-0.5">{state.detail}</p>
-            )}
-          </div>
-        </div>
+          Begin accessibility check
+        </button>
+      )}
+
+      {/* Error */}
+      {state.status === "error" && (
+        <p role="alert" className="text-sm text-error font-sans">
+          {state.message}
+        </p>
       )}
     </div>
   );
