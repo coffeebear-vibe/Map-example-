@@ -1,4 +1,4 @@
-import type { Config } from "tailwindcss";
+﻿import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: [
@@ -10,9 +10,13 @@ const config: Config = {
     extend: {
       colors: {
         accent: {
-          DEFAULT: "#7C3AED",
-          hover: "#6D28D9",
-          light: "#EDE9FE",
+          DEFAULT: "#F2A413",
+          hover: "#D97F0A",
+          light: "#FEF3D6",
+        },
+        primary: {
+          DEFAULT: "#4B7DBF",
+          light: "#EBF2FB",
         },
         success: {
           DEFAULT: "#16A34A",
@@ -23,12 +27,12 @@ const config: Config = {
           light: "#FEF3C7",
         },
         error: {
-          DEFAULT: "#DC2626",
+          DEFAULT: "#D93B48",
           light: "#FEE2E2",
         },
-        border: "#E4E4E7",
-        bg: "#FFFFFF",
-        surface: "#F7F7F8",
+        border: "#D9D6CC",
+        bg: "#FAFAF8",
+        surface: "#F0EFE9",
         "text-primary": "#1A1A1A",
         "text-secondary": "#6B6B6B",
       },

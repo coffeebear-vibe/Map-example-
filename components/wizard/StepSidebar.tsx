@@ -1,4 +1,4 @@
-interface Step {
+﻿interface Step {
   id: string;
   label: string;
 }
@@ -24,7 +24,7 @@ export function StepSidebar({
       style={{
         width: "280px",
         flexShrink: 0,
-        borderRight: "1px solid #E4E4E7",
+        borderRight: "1px solid #D9D6CC",
         backgroundColor: "#FFFFFF",
         display: "flex",
         flexDirection: "column",
@@ -32,7 +32,7 @@ export function StepSidebar({
       }}
     >
       {/* Logo */}
-      <div style={{ padding: "0 1.5rem 2rem", borderBottom: "1px solid #E4E4E7" }}>
+      <div style={{ padding: "0 1.5rem 2rem", borderBottom: "1px solid #D9D6CC" }}>
         <span
           style={{
             fontFamily: "DM Sans, sans-serif",
@@ -62,9 +62,9 @@ export function StepSidebar({
                     alignItems: "center",
                     gap: "0.875rem",
                     padding: "0.625rem 1.5rem",
-                    backgroundColor: isCurrent ? "#EDE9FE" : "transparent",
+                    backgroundColor: isCurrent ? "#FEF3D6" : "transparent",
                     borderLeft: isCurrent
-                      ? "3px solid #7C3AED"
+                      ? "3px solid #4B7DBF"
                       : "3px solid transparent",
                   }}
                 >
@@ -84,10 +84,10 @@ export function StepSidebar({
                       backgroundColor: isCompleted
                         ? "#16A34A"
                         : isCurrent
-                        ? "#7C3AED"
-                        : "#F7F7F8",
+                        ? "#4B7DBF"
+                        : "#F0EFE9",
                       color: isCompleted || isCurrent ? "#FFFFFF" : "#6B6B6B",
-                      border: isUpcoming ? "1px solid #E4E4E7" : "none",
+                      border: isUpcoming ? "1px solid #D9D6CC" : "none",
                     }}
                   >
                     {isCompleted ? "✓" : index + 1}
@@ -101,7 +101,7 @@ export function StepSidebar({
                       color: isCompleted
                         ? "#16A34A"
                         : isCurrent
-                        ? "#7C3AED"
+                        ? "#4B7DBF"
                         : "#6B6B6B",
                     }}
                   >
@@ -119,7 +119,7 @@ export function StepSidebar({
         style={{
           marginTop: "auto",
           padding: "1.25rem 1.5rem",
-          borderTop: "1px solid #E4E4E7",
+          borderTop: "1px solid #D9D6CC",
         }}
       >
         <p
@@ -131,7 +131,7 @@ export function StepSidebar({
           }}
         >
           <span
-            style={{ fontWeight: 600, color: "#7C3AED" }}
+            style={{ fontWeight: 600, color: "#4B7DBF" }}
           >
             {resolvedCount} of {totalCount}
           </span>{" "}
@@ -141,3 +141,4 @@ export function StepSidebar({
     </aside>
   );
 }
+

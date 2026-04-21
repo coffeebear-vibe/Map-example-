@@ -60,26 +60,34 @@ function countResolved(session: RemediationSession) {
 }
 
 // Placeholder for steps not yet implemented in Phase 3
-function ComingSoonStep({ label, stepIndex, onNext }: { label: string; stepIndex: number; onNext: () => void }) {
+function ComingSoonStep({ label, stepIndex, onNext, onBack }: { label: string; stepIndex: number; onNext: () => void; onBack: () => void }) {
   return (
     <div style={{ maxWidth: "560px" }}>
-      <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: "0.8125rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#7C3AED", margin: "0 0 0.5rem" }}>
+      <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: "0.8125rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#4B7DBF", margin: "0 0 0.5rem" }}>
         Step {stepIndex + 1}
       </p>
       <h2 style={{ fontFamily: "DM Sans, sans-serif", fontWeight: 600, fontSize: "1.75rem", color: "#1A1A1A", margin: "0 0 1rem", lineHeight: 1.2 }}>
         {label}
       </h2>
-      <div style={{ backgroundColor: "#F7F7F8", border: "1px solid #E4E4E7", borderRadius: "12px", padding: "1.5rem", marginBottom: "2rem" }}>
+      <div style={{ backgroundColor: "#F0EFE9", border: "1px solid #D9D6CC", borderRadius: "12px", padding: "1.5rem", marginBottom: "2rem" }}>
         <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: "0.9375rem", color: "#6B6B6B", margin: 0 }}>
           This step is coming in Phase 4. Click Continue to proceed.
         </p>
       </div>
-      <button
-        onClick={onNext}
-        style={{ fontFamily: "DM Sans, sans-serif", fontWeight: 500, fontSize: "1rem", color: "#FFFFFF", backgroundColor: "#7C3AED", border: "none", borderRadius: "8px", padding: "12px 24px", cursor: "pointer" }}
-      >
-        Continue
-      </button>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "0.75rem" }}>
+        <button
+          onClick={onNext}
+          style={{ fontFamily: "DM Sans, sans-serif", fontWeight: 500, fontSize: "1rem", color: "#FFFFFF", backgroundColor: "#4B7DBF", border: "none", borderRadius: "8px", padding: "12px 24px", cursor: "pointer" }}
+        >
+          Continue
+        </button>
+        <button
+          onClick={onBack}
+          style={{ background: "none", border: "none", fontFamily: "DM Sans, sans-serif", fontSize: "0.875rem", color: "#6B6B6B", cursor: "pointer", padding: 0, textDecoration: "underline" }}
+        >
+          ← Back
+        </button>
+      </div>
     </div>
   );
 }
@@ -109,6 +117,14 @@ export function WizardShell() {
       return next;
     });
   }, []);
+
+  function goBack() {
+    if (currentIndex === 0) {
+      router.push("/");
+    } else {
+      setCurrentIndex((i) => i - 1);
+    }
+  }
 
   function advance(updatedSession?: Partial<RemediationSession>) {
     if (updatedSession) updateSession(updatedSession);
@@ -147,6 +163,7 @@ export function WizardShell() {
             initial={session.analysis.metadata}
             onSave={(data) => advance({ fixes: { ...session.fixes, metadata: data } })}
             onSkip={() => advance()}
+            onBack={goBack}
           />
         );
       case "alt-text":
@@ -157,6 +174,7 @@ export function WizardShell() {
             stepIndex={currentIndex}
             onSave={(fixes) => advance({ fixes: { ...session.fixes, altText: fixes } })}
             onSkip={() => advance()}
+            onBack={goBack}
           />
         );
       default:
@@ -165,13 +183,14 @@ export function WizardShell() {
             label={currentStep.label}
             stepIndex={currentIndex}
             onNext={() => advance()}
+            onBack={goBack}
           />
         );
     }
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#FFFFFF" }}>
+    <div style={{ display: "flex", height: currentStep.id === "alt-text" ? "100vh" : undefined, minHeight: currentStep.id === "alt-text" ? undefined : "100vh", overflow: currentStep.id === "alt-text" ? "hidden" : undefined, backgroundColor: "#FFFFFF" }}>
       {/* Skip nav */}
       <a
         href="#main-content"
@@ -180,7 +199,7 @@ export function WizardShell() {
           left: "-9999px",
           top: "auto",
           zIndex: 100,
-          backgroundColor: "#7C3AED",
+          backgroundColor: "#4B7DBF",
           color: "#FFFFFF",
           padding: "8px 16px",
           fontFamily: "DM Sans, sans-serif",
@@ -207,8 +226,10 @@ export function WizardShell() {
         id="main-content"
         style={{
           flex: 1,
-          padding: "3rem 4rem",
-          overflowY: "auto",
+          padding: currentStep.id === "alt-text" ? "0" : "3rem 4rem",
+          overflowY: currentStep.id === "alt-text" ? "hidden" : "auto",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         {/* ARIA live region announces step changes */}
@@ -221,3 +242,4 @@ export function WizardShell() {
     </div>
   );
 }
+

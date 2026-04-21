@@ -14,9 +14,10 @@ export interface RemediationSession {
     images: Array<{
       id: string;
       pageIndex: number;
-      preview: string; // base64 data URL of page thumbnail
+      preview: string;
       hasAlt: boolean;
       currentAlt: string | null;
+      bbox: { x: number; y: number; width: number; height: number } | null;
     }>;
     hasStructureTree: boolean;
     hasMarkInfo: boolean;

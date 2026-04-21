@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -27,9 +27,10 @@ interface MetadataStepProps {
   initial: { title: string | null; author: string | null; language: string | null };
   onSave: (data: { title: string; author: string; language: string }) => void;
   onSkip: () => void;
+  onBack: () => void;
 }
 
-export function MetadataStep({ initial, onSave, onSkip }: MetadataStepProps) {
+export function MetadataStep({ initial, onSave, onSkip, onBack }: MetadataStepProps) {
   const [title, setTitle] = useState(initial.title ?? "");
   const [author, setAuthor] = useState(initial.author ?? "");
   const [language, setLanguage] = useState(initial.language ?? "en");
@@ -45,7 +46,7 @@ export function MetadataStep({ initial, onSave, onSkip }: MetadataStepProps) {
           fontWeight: 600,
           textTransform: "uppercase",
           letterSpacing: "0.07em",
-          color: "#7C3AED",
+          color: "#4B7DBF",
           margin: "0 0 0.5rem",
         }}
       >
@@ -114,7 +115,7 @@ export function MetadataStep({ initial, onSave, onSkip }: MetadataStepProps) {
             }}
           >
             Document Language{" "}
-            <span style={{ color: "#DC2626" }} aria-hidden="true">*</span>
+            <span style={{ color: "#D93B48" }} aria-hidden="true">*</span>
           </label>
           <select
             id="doc-language"
@@ -127,7 +128,7 @@ export function MetadataStep({ initial, onSave, onSkip }: MetadataStepProps) {
               width: "100%",
               padding: "10px 14px",
               borderRadius: "8px",
-              border: "1px solid #E4E4E7",
+              border: "1px solid #D9D6CC",
               fontFamily: "DM Sans, sans-serif",
               fontSize: "1rem",
               color: "#1A1A1A",
@@ -174,20 +175,18 @@ export function MetadataStep({ initial, onSave, onSkip }: MetadataStepProps) {
         </Button>
         <button
           onClick={onSkip}
-          style={{
-            background: "none",
-            border: "none",
-            fontFamily: "DM Sans, sans-serif",
-            fontSize: "0.875rem",
-            color: "#6B6B6B",
-            cursor: "pointer",
-            padding: 0,
-            textDecoration: "underline",
-          }}
+          style={{ background: "none", border: "none", fontFamily: "DM Sans, sans-serif", fontSize: "0.875rem", color: "#6B6B6B", cursor: "pointer", padding: 0, textDecoration: "underline" }}
         >
           Skip this step
+        </button>
+        <button
+          onClick={onBack}
+          style={{ background: "none", border: "none", fontFamily: "DM Sans, sans-serif", fontSize: "0.875rem", color: "#6B6B6B", cursor: "pointer", padding: 0, textDecoration: "underline" }}
+        >
+          ← Back
         </button>
       </div>
     </div>
   );
 }
+

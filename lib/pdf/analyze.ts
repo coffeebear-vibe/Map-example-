@@ -14,6 +14,67 @@ async function getPdfjs() {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+type Matrix = [number, number, number, number, number, number];
+
+function multiplyMatrix(a: Matrix, b: Matrix): Matrix {
+  return [
+    a[0] * b[0] + a[2] * b[1],
+    a[1] * b[0] + a[3] * b[1],
+    a[0] * b[2] + a[2] * b[3],
+    a[1] * b[2] + a[3] * b[3],
+    a[0] * b[4] + a[2] * b[5] + a[4],
+    a[1] * b[4] + a[3] * b[5] + a[5],
+  ];
+}
+
+function transformPoint(m: Matrix, x: number, y: number): [number, number] {
+  return [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function extractImageBboxes(page: any): Promise<Array<{ x: number; y: number; width: number; height: number } | null>> {
+  const bboxes: Array<{ x: number; y: number; width: number; height: number } | null> = [];
+  try {
+    const ops = await page.getOperatorList();
+    const OPS = (await import("pdfjs-dist")).OPS;
+    const identity: Matrix = [1, 0, 0, 1, 0, 0];
+    const stack: Matrix[] = [identity];
+    let current: Matrix = identity;
+
+    for (let i = 0; i < ops.fnArray.length; i++) {
+      const fn = ops.fnArray[i];
+      const args = ops.argsArray[i];
+
+      if (fn === OPS.save) {
+        stack.push(current);
+      } else if (fn === OPS.restore) {
+        current = stack.pop() ?? identity;
+      } else if (fn === OPS.transform) {
+        const m: Matrix = [args[0], args[1], args[2], args[3], args[4], args[5]];
+        current = multiplyMatrix(current, m);
+      } else if (fn === OPS.paintImageXObject || fn === OPS.paintInlineImageXObject || fn === OPS.paintImageMaskXObject) {
+        // Image occupies unit square [0,1]x[0,1] in current CTM space
+        const corners: [number, number][] = [
+          transformPoint(current, 0, 0),
+          transformPoint(current, 1, 0),
+          transformPoint(current, 0, 1),
+          transformPoint(current, 1, 1),
+        ];
+        const xs = corners.map((c) => c[0]);
+        const ys = corners.map((c) => c[1]);
+        const x = Math.min(...xs);
+        const y = Math.min(...ys);
+        const width = Math.max(...xs) - x;
+        const height = Math.max(...ys) - y;
+        bboxes.push({ x, y, width, height });
+      }
+    }
+  } catch {
+    // operator list unavailable
+  }
+  return bboxes;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function findNodes(node: any, roles: string[], out: any[] = []): any[] {
   if (!node) return out;
@@ -128,7 +189,9 @@ export async function analyzePdf(
 
       // Figures / images
       const figureNodes = findNodes(structTree, ["Figure", "Image", "Formula"]);
-      for (const node of figureNodes) {
+      const bboxes = figureNodes.length > 0 ? await extractImageBboxes(page) : [];
+      for (let j = 0; j < figureNodes.length; j++) {
+        const node = figureNodes[j];
         const hasAlt = typeof node.alt === "string" && node.alt.trim().length > 0;
         images.push({
           id: `img-p${i}-${images.length}`,
@@ -136,6 +199,7 @@ export async function analyzePdf(
           preview: "",
           hasAlt,
           currentAlt: node.alt ?? null,
+          bbox: bboxes[j] ?? null,
         });
       }
 
